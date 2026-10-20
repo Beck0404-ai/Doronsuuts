@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { 
-  Building2, Calculator, ShieldCheck, Key, CheckCircle, ArrowRight, 
-  Home, UserCheck, Sparkles, Percent, Award
+  Calculator, ShieldCheck, Key, CheckCircle, ArrowRight, 
+  Home, UserCheck
 } from 'lucide-react';
 import { APARTMENT_TYPES, calculateContractDetails } from '../data/mockData';
 
@@ -53,18 +53,10 @@ export default function PublicLanding({ onNavigateResident }) {
     <div className="landing-container">
       {/* Hero Section */}
       <section className="hero-section">
-        <div className="hero-badge">
-          <Sparkles size={14} className="text-amber" /> 
-          <span>2026 Оны Түрээслээд Өмчлөх Орон Сууцны Хөтөлбөр</span>
-        </div>
         <h1 className="hero-title">
           Үндсэн төлбөрийн <span className="highlight-gradient">25%-ийг төлөөд</span>, 
           үлдсэнийг <span className="highlight-gradient">5 жилд 0% хүүгүй</span> өмчил
         </h1>
-        <p className="hero-subtitle">
-          Банкны өндөр хүүгүй, батлан даагч шаардахгүйгээр сар бүр түрээс төлөх мэт 5 жилийн дотор 
-          100% өөрийн байртай болох хамгийн таатай боломж. СӨХ болон төлбөрийн нэгдсэн ухаалаг систем.
-        </p>
 
         <div className="hero-cta-group">
           <a href="#calculator" className="btn-primary-large">
@@ -73,33 +65,6 @@ export default function PublicLanding({ onNavigateResident }) {
           <button onClick={onNavigateResident} className="btn-secondary-large">
             <Key size={18} /> Оршин Суугчийн Нэвтрэх
           </button>
-        </div>
-
-        {/* 3 Key Pillars */}
-        <div className="hero-features-grid">
-          <div className="feature-card">
-            <div className="feature-icon bg-blue-glow">
-              <Percent size={22} />
-            </div>
-            <h3>25% Урьдчилгаа</h3>
-            <p>Байрны үнийн ердөө 25%-ийг урьдчилан төлж, өмчлөлийн гэрээгээ шууд баталгаажуулна.</p>
-          </div>
-
-          <div className="feature-card">
-            <div className="feature-icon bg-emerald-glow">
-              <Award size={22} />
-            </div>
-            <h3>5 Жил 0% Хүүгүй</h3>
-            <p>Үлдсэн 75% төлбөрөө 60 сарын турш ямар ч хүүгүй, нэмэлт шимтгэлгүй сар сараар төлнө.</p>
-          </div>
-
-          <div className="feature-card">
-            <div className="feature-icon bg-purple-glow">
-              <Building2 size={22} />
-            </div>
-            <h3>Нэгдсэн СӨХ & Профайл</h3>
-            <p>СӨХ-ийн төлбөр, өмчлөлийн хувь, алдангийн тооцоолол, QPay төлөлт бүгд нэг дор.</p>
-          </div>
         </div>
       </section>
 
