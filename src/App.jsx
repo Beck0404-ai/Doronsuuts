@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { User, Briefcase, Calculator, ShieldCheck, LogIn, LogOut, KeyRound } from 'lucide-react';
+import { User, Briefcase, ShieldCheck, LogOut } from 'lucide-react';
 import { generateResidents } from './data/mockData';
-import PublicLanding from './components/PublicLanding';
+import FrontLoginPage from './components/FrontLoginPage';
 import ResidentPortal from './components/ResidentPortal';
 import AccountantPortal from './components/AccountantPortal';
 import AdminPortal from './components/AdminPortal';
@@ -14,7 +14,7 @@ function App() {
   const [activePortal, setActivePortal] = useState('LANDING'); // 'LANDING' | 'RESIDENT' | 'ACCOUNTANT' | 'ADMIN'
   
   // Auth state: Separate Resident session vs Staff session (Accountant / Admin)
-  const [loggedInResident, setLoggedInResident] = useState(residents[0] || null); // Default resident session
+  const [loggedInResident, setLoggedInResident] = useState(null); // Default to null for clean login front page
   const [loggedInStaff, setLoggedInStaff] = useState(null); // Staff user: { name, role: 'ACCOUNTANT' | 'ADMIN', roleTitle }
 
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -73,56 +73,46 @@ function App() {
 
         {/* Navigation Section */}
         <div className="controls-section" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div className="role-toggle">
-            {/* 1. Public Program Landing */}
-            <button 
-              className={`role-btn ${activePortal === 'LANDING' ? 'active' : ''}`}
-              onClick={() => setActivePortal('LANDING')}
-            >
-              <Calculator size={15} /> Хөтөлбөр & Тооцоолуур
-            </button>
+          {/* Active Portal Toggle (Only shown when a user is logged in) */}
+          {(loggedInResident || loggedInStaff) && (
+            <div className="role-toggle">
+              {/* Resident Portal Tab */}
+              {loggedInResident && (
+                <button 
+                  className={`role-btn ${activePortal === 'RESIDENT' ? 'active' : ''}`}
+                  onClick={() => setActivePortal('RESIDENT')}
+                >
+                  <User size={15} /> Оршин Суугчийн Портал
+                </button>
+              )}
 
-            {/* 2. Resident Portal Button */}
-            <button 
-              className={`role-btn ${activePortal === 'RESIDENT' ? 'active' : ''}`}
-              onClick={() => {
-                if (loggedInResident) {
-                  setActivePortal('RESIDENT');
-                } else {
-                  setAuthModalMode('LOGIN');
-                  setShowAuthModal(true);
-                }
-              }}
-            >
-              <User size={15} /> Оршин Суугч
-            </button>
+              {/* Accountant Portal Tab */}
+              {loggedInStaff && (loggedInStaff.role === 'ACCOUNTANT' || loggedInStaff.role === 'ADMIN') && (
+                <button 
+                  className={`role-btn ${activePortal === 'ACCOUNTANT' ? 'active' : ''}`}
+                  style={{ background: activePortal === 'ACCOUNTANT' ? '#2563eb' : 'rgba(37,99,235,0.08)', color: activePortal === 'ACCOUNTANT' ? '#fff' : '#1e40af' }}
+                  onClick={() => setActivePortal('ACCOUNTANT')}
+                >
+                  <Briefcase size={15} /> Нягтлан Бодогч
+                </button>
+              )}
 
-            {/* 3. Protected Accountant Portal (Only visible if logged in as Accountant or Admin) */}
-            {loggedInStaff && (loggedInStaff.role === 'ACCOUNTANT' || loggedInStaff.role === 'ADMIN') && (
-              <button 
-                className={`role-btn ${activePortal === 'ACCOUNTANT' ? 'active' : ''}`}
-                style={{ background: activePortal === 'ACCOUNTANT' ? '#2563eb' : 'rgba(37,99,235,0.08)', color: activePortal === 'ACCOUNTANT' ? '#fff' : '#1e40af' }}
-                onClick={() => setActivePortal('ACCOUNTANT')}
-              >
-                <Briefcase size={15} /> Нягтлан Бодогч
-              </button>
-            )}
+              {/* Admin Portal Tab */}
+              {loggedInStaff && loggedInStaff.role === 'ADMIN' && (
+                <button 
+                  className={`role-btn ${activePortal === 'ADMIN' ? 'active' : ''}`}
+                  style={{ background: activePortal === 'ADMIN' ? '#7c3aed' : 'rgba(124,58,237,0.08)', color: activePortal === 'ADMIN' ? '#fff' : '#6d28d9' }}
+                  onClick={() => setActivePortal('ADMIN')}
+                >
+                  <ShieldCheck size={15} /> Системийн Админ
+                </button>
+              )}
+            </div>
+          )}
 
-            {/* 4. Protected Admin Portal (Only visible if logged in as Admin) */}
-            {loggedInStaff && loggedInStaff.role === 'ADMIN' && (
-              <button 
-                className={`role-btn ${activePortal === 'ADMIN' ? 'active' : ''}`}
-                style={{ background: activePortal === 'ADMIN' ? '#7c3aed' : 'rgba(124,58,237,0.08)', color: activePortal === 'ADMIN' ? '#fff' : '#6d28d9' }}
-                onClick={() => setActivePortal('ADMIN')}
-              >
-                <ShieldCheck size={15} /> Системийн Админ
-              </button>
-            )}
-          </div>
-
-          {/* User Session Badges or Login Actions */}
+          {/* User Session Badges or Front Notice */}
           <div className="auth-profile-badge">
-            {/* Case A: Staff Logged In (Accountant or Admin) */}
+            {/* Case A: Staff Logged In */}
             {loggedInStaff ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '4px 10px', background: loggedInStaff.role === 'ACCOUNTANT' ? '#eff6ff' : '#f5f3ff', borderRadius: '8px', border: loggedInStaff.role === 'ACCOUNTANT' ? '1px solid #bfdbfe' : '1px solid #ddd6fe' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -142,7 +132,7 @@ function App() {
                   className="btn-icon-sm"
                   title="Гарах (Logout)"
                   onClick={handleLogout}
-                  style={{ marginLeft: '4px', background: 'transparent', border: 'none', color: '#64748b' }}
+                  style={{ marginLeft: '4px', background: 'transparent', border: 'none', color: '#64748b', cursor: 'pointer' }}
                 >
                   <LogOut size={14} />
                 </button>
@@ -167,28 +157,17 @@ function App() {
                   className="btn-icon-sm"
                   title="Гарах (Logout)"
                   onClick={handleLogout}
-                  style={{ marginLeft: '4px', background: 'transparent', border: 'none', color: '#64748b' }}
+                  style={{ marginLeft: '4px', background: 'transparent', border: 'none', color: '#64748b', cursor: 'pointer' }}
                 >
                   <LogOut size={14} />
                 </button>
               </div>
             ) : (
-              /* Case C: Not logged in (Public user) */
-              <div style={{ display: 'flex', gap: '6px' }}>
-                <button 
-                  className="btn-secondary"
-                  style={{ padding: '6px 12px', fontSize: '12px' }}
-                  onClick={() => { setAuthModalMode('LOGIN'); setShowAuthModal(true); }}
-                >
-                  <LogIn size={14} /> Оршин Суугч Нэвтрэх
-                </button>
-                <button 
-                  className="btn-primary"
-                  style={{ padding: '6px 12px', fontSize: '12px' }}
-                  onClick={() => { setAuthModalMode('REGISTER'); setShowAuthModal(true); }}
-                >
-                  Бүртгүүлэх
-                </button>
+              /* Case C: Front Page (Not logged in) */
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '12px', fontWeight: 600, color: '#2563eb', background: '#eff6ff', padding: '6px 14px', borderRadius: '20px', border: '1px solid #bfdbfe' }}>
+                  🔐 Нэвтрэх хэсэг
+                </span>
               </div>
             )}
           </div>
@@ -198,15 +177,9 @@ function App() {
       {/* Main Content Area */}
       <main className="main-content-wrapper">
         {activePortal === 'LANDING' && (
-          <PublicLanding 
-            onNavigateResident={() => {
-              if (loggedInResident) {
-                setActivePortal('RESIDENT');
-              } else {
-                setAuthModalMode('LOGIN');
-                setShowAuthModal(true);
-              }
-            }}
+          <FrontLoginPage 
+            residents={residents} 
+            onLoginSuccess={handleAuthSuccess} 
           />
         )}
 
@@ -257,17 +230,8 @@ function App() {
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             <div style={{ fontSize: '12px', color: '#94a3b8' }}>
-              © {new Date().getFullYear()} Бүх эрх хуулиар хамгаалагдсан.
+              © {new Date().getFullYear()} Дорноговь Апартмент ХХК. Бүх эрх хуулиар хамгаалагдсан.
             </div>
-
-            {/* Protected Staff Entry Door */}
-            <button 
-              className="btn-secondary"
-              style={{ fontSize: '11px', padding: '5px 10px', color: '#64748b', background: '#f8fafc', borderColor: '#cbd5e1', display: 'flex', alignItems: 'center', gap: '5px' }}
-              onClick={() => { setAuthModalMode('STAFF'); setShowAuthModal(true); }}
-            >
-              <KeyRound size={12} /> Ажилтны нэвтрэх (Нягтлан / Админ)
-            </button>
           </div>
         </div>
       </footer>
