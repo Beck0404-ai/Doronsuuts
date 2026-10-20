@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { 
   User, ShieldCheck, LogIn, KeyRound, CheckCircle2, 
-  Lock, Mail, Phone, Briefcase, Sparkles
+  Lock, Mail, Phone, Briefcase
 } from 'lucide-react';
 import { SYSTEM_USERS } from '../data/mockData';
 
@@ -165,16 +165,9 @@ export default function FrontLoginPage({ residents = [], onLoginSuccess }) {
     <div className="front-login-page">
       {/* Brand Header */}
       <div className="front-login-header">
-        <div className="front-brand-badge">
-          <Sparkles size={14} className="text-primary" />
-          <span>502-р байрны түрээслээд өмчлөх ба СӨХ-ийн нэгдсэн систем</span>
-        </div>
         <h1 className="front-brand-title">
           ДОРНОГОВЬ АПАРТМЕНТ
         </h1>
-        <p className="front-brand-desc">
-          Үндсэн төлбөрийн <strong>25%-ийг төлөөд</strong>, үлдсэнийг <strong>5 жилд 0% хүүгүй</strong> өмчлөх систем
-        </p>
       </div>
 
       {/* Dual Login Grid */}
