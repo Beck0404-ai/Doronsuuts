@@ -1,9 +1,22 @@
 import { useState } from 'react';
 import { 
   User, ShieldCheck, LogIn, KeyRound, CheckCircle2, 
-  Lock, Mail, Phone
+  Lock, Mail, Phone, Home
 } from 'lucide-react';
-import { SYSTEM_USERS } from '../data/mockData';
+import { SYSTEM_USERS, getResidentCode } from '../data/mockData';
+
+function normalizeCode(str) {
+  if (!str) return '';
+  return str.toString().toUpperCase()
+    .replace(/\s+/g, '')
+    .replace(/[,\-_.]/g, '')
+    .replace(/БАЙР/g, '')
+    .replace(/ТООТ/g, '')
+    .replace(/B/g, 'В')
+    .replace(/V/g, 'В')
+    .replace(/D/g, 'Д')
+    .replace(/A/g, 'А');
+}
 
 export default function FrontLoginPage({ residents = [], onLoginSuccess }) {
   // Resident Login / Register Mode
@@ -31,66 +44,59 @@ export default function FrontLoginPage({ residents = [], onLoginSuccess }) {
   const [staffPassword, setStaffPassword] = useState('');
   const [staffError, setStaffError] = useState('');
 
-  // Handle Resident Login
+  // Handle Resident Login by Apartment Code (e.g. 502В-1, 502Д-2) & Password (default 1234)
   const handleResidentLogin = (e) => {
     e.preventDefault();
     setResidentError('');
 
-    const clean = residentInput.trim().toLowerCase();
-    if (!clean) {
-      setResidentError('И-мэйл эсвэл утасны дугаараа оруулна уу');
+    const rawInput = residentInput.trim();
+    if (!rawInput) {
+      setResidentError('Байр, тоотоо (Жишээ нь: 502В-1) эсвэл утасны дугаараа оруулна уу');
       return;
     }
 
-    // Match resident by email, phone, name, or door number
+    const pass = residentPassword.trim();
+    if (!pass) {
+      setResidentError('Нууц үгээ оруулна уу (Анхдагч нууц үг: 1234)');
+      return;
+    }
+
+    const qClean = normalizeCode(rawInput);
+    const qPhone = rawInput.replace(/[^0-9]/g, '');
+    const qLower = rawInput.toLowerCase();
+
+    // Match resident by Code (502В-1), Door, Phone, Email, ContractNo, or Name
     const found = residents.find(r => {
-      const matchEmail = r.email && r.email.toLowerCase() === clean;
-      const matchPhone = r.phone && r.phone.replace(/[^0-9]/g, '').includes(clean.replace(/[^0-9]/g, ''));
-      const matchName = (r.firstName && r.firstName.toLowerCase() === clean) || (r.name && r.name.toLowerCase() === clean);
-      const matchDoor = r.door && String(r.door) === clean;
-      return matchEmail || matchPhone || matchName || matchDoor;
+      const code = r.residentCode || getResidentCode(r);
+      const codeClean = normalizeCode(code);
+      if (codeClean === qClean) return true;
+      if (normalizeCode(`502-${r.door}`) === qClean) return true;
+      if (String(r.door || '').trim() === rawInput) return true;
+      if (qPhone.length >= 7 && (r.phone || '').replace(/[^0-9]/g, '').includes(qPhone)) return true;
+      if (qLower.includes('@') && r.email && r.email.toLowerCase() === qLower) return true;
+      if (r.contractNo && normalizeCode(r.contractNo) === qClean) return true;
+      return false;
     });
 
-    if (found) {
-      onLoginSuccess({ type: 'RESIDENT', resident: found });
-    } else {
-      // Fallback guest session for instant demonstration
-      const guestResident = {
-        id: `RES-502-USR-${Date.now().toString().slice(-4)}`,
-        contractNo: `DGA-502-${Math.floor(Math.random() * 900 + 100)}`,
-        contractDate: '2024-01-01',
-        name: clean.includes('@') ? clean.split('@')[0] : `Оршин Суугч (${clean})`,
-        fullName: clean.includes('@') ? clean.split('@')[0] : `Оршин Суугч (${clean})`,
-        phone: clean.includes('@') ? '8811-2233' : clean,
-        email: clean.includes('@') ? clean : `${clean}@gmail.com`,
-        apartment: '502В байр, 1 тоот',
-        block: '502В байр',
-        door: '1',
-        areaSqm: 45.04,
-        rooms: 2,
-        totalPrice: 103592000,
-        downPayment: 25898000,
-        remainingPrincipal: 77694000,
-        monthlyRent: 1294900,
-        monthlySOH: 45040,
-        paidMonths: 8,
-        totalMonths: 60,
-        currentOwnershipPercent: 35,
-        totalPrincipalPaid: 36257200,
-        remainingBalance: 67334800,
-        remainingMonths: 52,
-        rentPaidThisMonth: 1294900,
-        rentUnpaid: 0,
-        sohPaidThisMonth: 45040,
-        sohUnpaid: 0,
-        overdueDays: 0,
-        rentPenalty: 0,
-        sohPenalty: 0,
-        status: 'Бүрэн төлсөн',
-        totalDueThisMonth: 0
-      };
-      onLoginSuccess({ type: 'RESIDENT', resident: guestResident });
+    if (!found) {
+      setResidentError(`"${rawInput}" кодтой өрх бүртгэлд олдсонгүй. Байрны код (Жишээ нь: 502В-1, 502Д-2) эсвэл утасны дугаараа шалгана уу.`);
+      return;
     }
+
+    // Verify Password: default is 1234, or resident's password, or phone last 4 digits, or door number
+    const phoneLast4 = (found.phone || '').replace(/[^0-9]/g, '').slice(-4);
+    const isValidPass = 
+      pass === '1234' || 
+      (found.password && pass === found.password) ||
+      (phoneLast4 && pass === phoneLast4) ||
+      pass === String(found.door);
+
+    if (!isValidPass) {
+      setResidentError('Нууц үг буруу байна. (Анхдагч нууц үг: 1234)');
+      return;
+    }
+
+    onLoginSuccess({ type: 'RESIDENT', resident: found });
   };
 
   // Handle Resident Registration
@@ -226,13 +232,13 @@ export default function FrontLoginPage({ residents = [], onLoginSuccess }) {
               )}
 
               <div className="form-group">
-                <label>И-мэйл эсвэл Утасны дугаар:</label>
+                <label>Байр, тоот (Оршин суугчийн код):</label>
                 <div className="input-with-icon">
-                  <Mail size={16} className="field-icon" />
+                  <Home size={16} className="field-icon" />
                   <input
                     type="text"
                     required
-                    placeholder="Жишээ: 99112233 эсвэл email@gmail.com"
+                    placeholder="Жишээ: 502В-1, 502Д-2, 502А-32..."
                     value={residentInput}
                     onChange={(e) => setResidentInput(e.target.value)}
                     className="input-field-custom"
@@ -246,7 +252,8 @@ export default function FrontLoginPage({ residents = [], onLoginSuccess }) {
                   <Lock size={16} className="field-icon" />
                   <input
                     type="password"
-                    placeholder="••••••••"
+                    required
+                    placeholder="Анхдагч нууц үг: 1234"
                     value={residentPassword}
                     onChange={(e) => setResidentPassword(e.target.value)}
                     className="input-field-custom"
@@ -257,6 +264,13 @@ export default function FrontLoginPage({ residents = [], onLoginSuccess }) {
               <button type="submit" className="front-submit-btn btn-resident">
                 <LogIn size={18} /> Оршин Суугчаар Нэвтрэх
               </button>
+
+              <div style={{ marginTop: '14px', padding: '10px 12px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '11px', color: '#475569', lineHeight: 1.5 }}>
+                <div style={{ fontWeight: 700, color: '#1e40af', marginBottom: '2px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <span>🔑 Нэвтрэх заавар:</span>
+                </div>
+                Өөрийн байр, тоотоо (Жишээ: <strong>502В-1</strong>, <strong>502Д-2</strong>) эсвэл бүртгэлтэй утасны дугаараа бичиж, анхдагч нууц үг <strong>1234</strong>-өөр нэвтэрнэ үү.
+              </div>
             </form>
           ) : (
             /* Registration Form */

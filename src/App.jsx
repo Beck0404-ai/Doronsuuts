@@ -192,7 +192,7 @@ function App() {
                       {loggedInResident.name || loggedInResident.fullName}
                     </div>
                     <div style={{ fontSize: '10px', color: '#64748b' }}>
-                      {loggedInResident.apartment ? loggedInResident.apartment.split(' ')[0] : '502 байр'}
+                      {loggedInResident.residentCode || (loggedInResident.apartment ? loggedInResident.apartment.split(' ')[0] : '502 байр')}
                     </div>
                   </div>
                 </div>

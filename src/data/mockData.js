@@ -118,10 +118,26 @@ export const SOH_BREAKDOWN_PERCENT = {
   waste: 0.10        // Хог тээвэрлэлт, ариутгал 10%
 };
 
-// Return real imported residents from 502-р байр
+// Helper to derive standard apartment code (e.g. 502В-1, 502Д-2, 502А-32)
+export function getResidentCode(res) {
+  if (res.residentCode) return res.residentCode;
+  let blockLetter = '';
+  const blk = String(res.block || res.apartment || '').toUpperCase();
+  if (blk.includes('В') || blk.includes('B') || blk.includes('V')) blockLetter = 'В';
+  else if (blk.includes('Д') || blk.includes('D')) blockLetter = 'Д';
+  else if (blk.includes('А') || blk.includes('A')) blockLetter = 'А';
+  const doorNum = String(res.door || '').trim();
+  return blockLetter ? `502${blockLetter}-${doorNum}` : `502-${doorNum}`;
+}
+
+// Return real imported residents from 502-р байр with standardized residentCode & password
 export function generateResidents() {
   if (realResidents502 && realResidents502.length > 0) {
-    return [...realResidents502];
+    return realResidents502.map(r => ({
+      ...r,
+      residentCode: getResidentCode(r),
+      password: r.password || '1234'
+    }));
   }
   return [];
 }

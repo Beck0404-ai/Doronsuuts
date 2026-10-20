@@ -209,8 +209,12 @@ export default function ResidentPortal({ residents, activeResidentProp, onUpdate
                 <h2 style={{ margin: '4px 0 0', fontSize: '22px', fontWeight: 800 }}>
                   {resident.fullName || resident.name}
                 </h2>
-                <div style={{ fontSize: '12px', color: '#93c5fd', marginTop: '2px' }}>
-                  {resident.apartment} • РД: {resident.regNo}
+                <div style={{ fontSize: '12px', color: '#93c5fd', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                  <span>{resident.apartment}</span>
+                  <span>•</span>
+                  <span>Нэвтрэх код: <strong style={{ color: '#fff', background: 'rgba(255,255,255,0.25)', padding: '1px 6px', borderRadius: '4px' }}>{resident.residentCode || '502-1'}</strong></span>
+                  <span>•</span>
+                  <span>РД: {resident.regNo}</span>
                 </div>
               </div>
 
