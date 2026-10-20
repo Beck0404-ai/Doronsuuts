@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { User, Briefcase, ShieldCheck, LogOut } from 'lucide-react';
 import { generateResidents } from './data/mockData';
+import { fetchResidentsFromSupabase, updateResidentInSupabase, mapDbToResident } from './services/residentService';
+import { supabase } from './lib/supabaseClient';
 import FrontLoginPage from './components/FrontLoginPage';
 import ResidentPortal from './components/ResidentPortal';
 import AccountantPortal from './components/AccountantPortal';
@@ -20,7 +22,46 @@ function App() {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authModalMode, setAuthModalMode] = useState('LOGIN'); // 'LOGIN' | 'REGISTER' | 'STAFF'
 
-  // Update a single resident's payment status and propagate to list
+  // Fetch residents from Supabase on mount & listen to realtime updates
+  useEffect(() => {
+    let isMounted = true;
+    
+    async function loadData() {
+      const dbResidents = await fetchResidentsFromSupabase();
+      if (isMounted && dbResidents && dbResidents.length > 0) {
+        setResidents(dbResidents);
+      }
+    }
+
+    loadData();
+
+    // Subscribe to Realtime Postgres changes on the residents table
+    if (supabase) {
+      const channel = supabase
+        .channel('realtime-residents')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'residents' },
+          (payload) => {
+            if (payload.new) {
+              const mapped = mapDbToResident(payload.new);
+              setResidents((prev) =>
+                prev.map((r) => (r.id === mapped.id ? mapped : r))
+              );
+              setLoggedInResident((prev) => (prev && prev.id === mapped.id ? mapped : prev));
+            }
+          }
+        )
+        .subscribe();
+
+      return () => {
+        isMounted = false;
+        supabase.removeChannel(channel);
+      };
+    }
+  }, []);
+
+  // Update a single resident's payment status and propagate to list & Supabase
   const handleUpdateResident = (updatedRes) => {
     setResidents((prev) => 
       prev.map((r) => (r.id === updatedRes.id ? updatedRes : r))
@@ -28,6 +69,8 @@ function App() {
     if (loggedInResident && loggedInResident.id === updatedRes.id) {
       setLoggedInResident(updatedRes);
     }
+    // Async persist to Supabase Database
+    updateResidentInSupabase(updatedRes);
   };
 
   // Handle successful login (Resident vs Staff)
