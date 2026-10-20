@@ -86,6 +86,7 @@ function App() {
     } else if (authPayload.type === 'STAFF') {
       const staffUser = authPayload.user;
       setLoggedInStaff(staffUser);
+      setLoggedInResident(null); // Clear any resident session when logging in as staff
       if (authPayload.role === 'ACCOUNTANT') {
         setActivePortal('ACCOUNTANT');
       } else if (authPayload.role === 'ADMIN') {
@@ -118,8 +119,8 @@ function App() {
           {/* Active Portal Toggle (Only shown when a user is logged in) */}
           {(loggedInResident || loggedInStaff) && (
             <div className="role-toggle">
-              {/* Resident Portal Tab */}
-              {loggedInResident && (
+              {/* Resident Portal Tab (Зөвхөн оршин суугч нэвтэрсэн үед л харагдана) */}
+              {loggedInResident && !loggedInStaff && (
                 <button 
                   className={`role-btn ${activePortal === 'RESIDENT' ? 'active' : ''}`}
                   onClick={() => setActivePortal('RESIDENT')}

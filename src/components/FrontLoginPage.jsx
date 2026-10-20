@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { 
   User, ShieldCheck, LogIn, KeyRound, CheckCircle2, 
-  Lock, Mail, Phone, Briefcase
+  Lock, Mail, Phone
 } from 'lucide-react';
 import { SYSTEM_USERS } from '../data/mockData';
 
@@ -27,9 +27,8 @@ export default function FrontLoginPage({ residents = [], onLoginSuccess }) {
   const [regSuccess, setRegSuccess] = useState(false);
 
   // Staff Login Form
-  const [staffRole, setStaffRole] = useState('ACCOUNTANT'); // 'ACCOUNTANT' | 'ADMIN'
-  const [staffUsername, setStaffUsername] = useState('accountant');
-  const [staffPassword, setStaffPassword] = useState('••••••••');
+  const [staffUsername, setStaffUsername] = useState('');
+  const [staffPassword, setStaffPassword] = useState('');
   const [staffError, setStaffError] = useState('');
 
   // Handle Resident Login
@@ -145,21 +144,37 @@ export default function FrontLoginPage({ residents = [], onLoginSuccess }) {
     e.preventDefault();
     setStaffError('');
 
-    if (staffRole === 'ACCOUNTANT') {
-      const acc = SYSTEM_USERS.find(u => u.role === 'ACCOUNTANT') || SYSTEM_USERS[1];
-      onLoginSuccess({ type: 'STAFF', user: acc, role: 'ACCOUNTANT' });
-    } else {
-      const adm = SYSTEM_USERS.find(u => u.role === 'ADMIN') || SYSTEM_USERS[0];
-      onLoginSuccess({ type: 'STAFF', user: adm, role: 'ADMIN' });
-    }
-  };
+    const inputUser = staffUsername.trim().toLowerCase();
+    const inputPass = staffPassword.trim();
 
-  // Sample residents for 1-click test
-  const demoResidents = [
-    residents[0] || { name: 'Б. Содномпунцаг (502В-1)', id: 'RES-01' },
-    residents[1] || { name: 'Д. Энхтогтох (502Д-2)', id: 'RES-02' },
-    residents[2] || { name: 'Т. Мөнхзул (502А-1)', id: 'RES-03' }
-  ];
+    if (!inputUser || !inputPass) {
+      setStaffError('Нэвтрэх нэр болон нууц үгээ оруулна уу');
+      return;
+    }
+
+    // Match by username, email, or name
+    const matched = SYSTEM_USERS.find(u => 
+      (u.username && u.username.toLowerCase() === inputUser) ||
+      (u.email && u.email.toLowerCase() === inputUser) ||
+      (u.name && u.name.toLowerCase() === inputUser)
+    );
+
+    if (!matched) {
+      setStaffError('Бүртгэлтэй ажилтан олдсонгүй. Нэвтрэх нэрээ шалгана уу.');
+      return;
+    }
+
+    if (matched.password && matched.password !== inputPass) {
+      setStaffError('Нууц үг буруу байна. Дахин оролдоно уу.');
+      return;
+    }
+
+    onLoginSuccess({ 
+      type: 'STAFF', 
+      user: matched, 
+      role: matched.role 
+    });
+  };
 
   return (
     <div className="front-login-page">
@@ -242,24 +257,6 @@ export default function FrontLoginPage({ residents = [], onLoginSuccess }) {
               <button type="submit" className="front-submit-btn btn-resident">
                 <LogIn size={18} /> Оршин Суугчаар Нэвтрэх
               </button>
-
-              {/* Quick Demo Residents */}
-              <div className="demo-chips-box">
-                <span className="demo-label">Шуурхай туршилтаар нэвтрэх өрхүүд:</span>
-                <div className="demo-chips-grid">
-                  {demoResidents.map((res, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      className="demo-chip-btn"
-                      onClick={() => onLoginSuccess({ type: 'RESIDENT', resident: res })}
-                    >
-                      <span>🏢 {res.name || res.fullName}</span>
-                      <small>{res.apartment ? res.apartment.split(' ')[0] : '502 байр'}</small>
-                    </button>
-                  ))}
-                </div>
-              </div>
             </form>
           ) : (
             /* Registration Form */
@@ -371,41 +368,24 @@ export default function FrontLoginPage({ residents = [], onLoginSuccess }) {
               <ShieldCheck size={24} />
             </div>
             <div>
-              <h2 className="front-card-title">🛡️ Админ & Ажилтан Нэвтрэх</h2>
-              <p className="front-card-subtitle">Санхүү, удирдлага, СӨХ-ийн дотоод систем</p>
+              <h2 className="front-card-title">🛡️ Ажилтан & Админ Нэвтрэх</h2>
+              <p className="front-card-subtitle">Санхүү, удирдлага, дотоод хяналтын систем</p>
             </div>
           </div>
 
-          {/* Role selector: Нягтлан vs Админ */}
-          <div className="front-role-switch">
-            <button
-              type="button"
-              className={`role-tab-btn ${staffRole === 'ACCOUNTANT' ? 'active-acc' : ''}`}
-              onClick={() => { setStaffRole('ACCOUNTANT'); setStaffUsername('accountant'); }}
-            >
-              <Briefcase size={16} /> Нягтлан Бодогч
-            </button>
-            <button
-              type="button"
-              className={`role-tab-btn ${staffRole === 'ADMIN' ? 'active-adm' : ''}`}
-              onClick={() => { setStaffRole('ADMIN'); setStaffUsername('admin'); }}
-            >
-              <ShieldCheck size={16} /> Системийн Админ
-            </button>
-          </div>
-
-          <form onSubmit={handleStaffLogin} className="front-form">
+          <form onSubmit={handleStaffLogin} className="front-form" style={{ marginTop: '16px' }}>
             {staffError && (
               <div className="front-error-banner">{staffError}</div>
             )}
 
             <div className="form-group">
-              <label>Ажилтны нэвтрэх нэр / И-мэйл:</label>
+              <label>Ажилтны нэвтрэх нэр эсвэл И-мэйл:</label>
               <div className="input-with-icon">
                 <Mail size={16} className="field-icon" />
                 <input
                   type="text"
                   required
+                  placeholder="Жишээ: soyol, bilguun, enkhtsetseg..."
                   value={staffUsername}
                   onChange={(e) => setStaffUsername(e.target.value)}
                   className="input-field-custom"
@@ -420,6 +400,7 @@ export default function FrontLoginPage({ residents = [], onLoginSuccess }) {
                 <input
                   type="password"
                   required
+                  placeholder="••••••••"
                   value={staffPassword}
                   onChange={(e) => setStaffPassword(e.target.value)}
                   className="input-field-custom"
@@ -428,81 +409,8 @@ export default function FrontLoginPage({ residents = [], onLoginSuccess }) {
             </div>
 
             <button type="submit" className="front-submit-btn btn-staff">
-              <KeyRound size={18} />
-              {staffRole === 'ACCOUNTANT' ? 'Нягтлангийн Самбарт Нэвтрэх' : 'Админ Системд Нэвтрэх'}
+              <KeyRound size={18} /> Системд Нэвтрэх
             </button>
-
-            {/* 5 Official Staff 1-Click Fast Access Chips */}
-            <div className="demo-chips-box staff-chips-box">
-              <span className="demo-label">Байгууллагын бодит 5 ажилтны шуурхай хандалт:</span>
-              <div className="staff-chips-grid">
-                {/* 1. Соёл-Ундараа */}
-                <button
-                  type="button"
-                  className="staff-chip-btn chip-acc"
-                  onClick={() => onLoginSuccess({ type: 'STAFF', user: SYSTEM_USERS[1], role: 'ACCOUNTANT' })}
-                >
-                  <div className="chip-avatar acc">💼</div>
-                  <div>
-                    <strong>Соёл-Ундараа</strong>
-                    <small>Ахлах Нягтлан Бодогч</small>
-                  </div>
-                </button>
-
-                {/* 2. Билгүүн */}
-                <button
-                  type="button"
-                  className="staff-chip-btn chip-adm"
-                  onClick={() => onLoginSuccess({ type: 'STAFF', user: SYSTEM_USERS[2], role: 'ADMIN' })}
-                >
-                  <div className="chip-avatar adm">🛡️</div>
-                  <div>
-                    <strong>Билгүүн</strong>
-                    <small>Системийн Админ</small>
-                  </div>
-                </button>
-
-                {/* 3. Энхцэцэг */}
-                <button
-                  type="button"
-                  className="staff-chip-btn chip-adm"
-                  onClick={() => onLoginSuccess({ type: 'STAFF', user: SYSTEM_USERS[0], role: 'ADMIN' })}
-                >
-                  <div className="chip-avatar ceo">👑</div>
-                  <div>
-                    <strong>Энхцэцэг</strong>
-                    <small>Гүйцэтгэх Захирал</small>
-                  </div>
-                </button>
-
-                {/* 4. Орхонсэлэнгэ */}
-                <button
-                  type="button"
-                  className="staff-chip-btn chip-acc"
-                  onClick={() => onLoginSuccess({ type: 'STAFF', user: SYSTEM_USERS[3], role: 'ACCOUNTANT' })}
-                >
-                  <div className="chip-avatar csh">🧾</div>
-                  <div>
-                    <strong>Орхонсэлэнгэ</strong>
-                    <small>Кассын Нярав</small>
-                  </div>
-                </button>
-
-                {/* 5. Нямсүрэн */}
-                <button
-                  type="button"
-                  className="staff-chip-btn chip-adm"
-                  style={{ gridColumn: 'span 2' }}
-                  onClick={() => onLoginSuccess({ type: 'STAFF', user: SYSTEM_USERS[4], role: 'ADMIN' })}
-                >
-                  <div className="chip-avatar proc">📦</div>
-                  <div>
-                    <strong>Нямсүрэн</strong>
-                    <small>Худалдан Авах Мэргэжилтэн</small>
-                  </div>
-                </button>
-              </div>
-            </div>
           </form>
         </div>
       </div>

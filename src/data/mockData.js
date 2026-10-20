@@ -20,6 +20,8 @@ export const TOTAL_MONTHS = 60;          // 5 years = 60 months
 export const SYSTEM_USERS = [
   {
     id: 'USR-CEO',
+    username: 'enkhtsetseg',
+    password: 'enkh123',
     name: 'Энхцэцэг',
     fullName: 'Энхцэцэг',
     role: 'ADMIN',
@@ -30,6 +32,8 @@ export const SYSTEM_USERS = [
   },
   {
     id: 'USR-ACC',
+    username: 'soyol',
+    password: 'soyol123',
     name: 'Соёл-Ундараа',
     fullName: 'Соёл-Ундараа',
     role: 'ACCOUNTANT',
@@ -40,6 +44,8 @@ export const SYSTEM_USERS = [
   },
   {
     id: 'USR-ADM',
+    username: 'bilguun',
+    password: 'bilguun123',
     name: 'Билгүүн',
     fullName: 'Билгүүн',
     role: 'ADMIN',
@@ -50,6 +56,8 @@ export const SYSTEM_USERS = [
   },
   {
     id: 'USR-CSH',
+    username: 'orkhon',
+    password: 'orkhon123',
     name: 'Орхонсэлэнгэ',
     fullName: 'Орхонсэлэнгэ',
     role: 'ACCOUNTANT',
@@ -60,6 +68,8 @@ export const SYSTEM_USERS = [
   },
   {
     id: 'USR-PROC',
+    username: 'nyamsuren',
+    password: 'nyam123',
     name: 'Нямсүрэн',
     fullName: 'Нямсүрэн',
     role: 'ADMIN',
