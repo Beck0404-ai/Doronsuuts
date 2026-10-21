@@ -8,6 +8,7 @@ import ResidentPortal from './components/ResidentPortal';
 import AccountantPortal from './components/AccountantPortal';
 import AdminPortal from './components/AdminPortal';
 import AuthModal from './components/AuthModal';
+import PWAInstallPrompt from './components/PWAInstallPrompt';
 
 function App() {
   const [residents, setResidents] = useState(() => generateResidents());
@@ -278,6 +279,9 @@ function App() {
           </div>
         </div>
       </footer>
+
+      {/* PWA Mobile & Desktop Install Prompt */}
+      <PWAInstallPrompt />
     </div>
   );
 }
